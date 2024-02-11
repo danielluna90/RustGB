@@ -7,7 +7,7 @@ A Gameboy / Gameboy Color Emulator written in Rust
 You can run `rustgb --help` which will output:
 
 ```
-RustGB 0.1
+RustGB - v0.1
 
 USAGE:
   rustgb <filename>
