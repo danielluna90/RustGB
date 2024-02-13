@@ -1,4 +1,5 @@
 use clap::Parser;
+use crate::cpu::CPU;
 
 pub mod cpu;
 pub mod registers;
@@ -15,5 +16,7 @@ fn main() {
 
     println!("Filename: {}", args.filename);
 
-    println!("Hello, World!");
+    let cpu = CPU::new();
+
+    println!("{}", cpu.registers);
 }

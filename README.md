@@ -1,6 +1,6 @@
 # RustGB
 
-A Gameboy / Gameboy Color Emulator written in Rust
+A Game Boy / Game Boy Color Emulator written in Rust
 
 ## Quickstart Guide
 

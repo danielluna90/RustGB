@@ -1,3 +1,5 @@
+use std::fmt;
+
 pub struct Registers {
     pub a: u8,
     pub f: u8,
@@ -25,5 +27,11 @@ impl Registers {
 
     pub fn get_bc(&self) -> u16 {
         (self.b as u16) << 8 | self.c as u16
+    }
+}
+
+impl fmt::Display for Registers {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "A: {:#04x}, F: {:#04x} (C: , H: , N: , Z: )\nB: {:#04x}, C: {:#04x}\nD: {:#04x}, E: {:#04x}\nH: {:#04x}, L: {:#04x}", self.a, self.f, self.b, self.c, self.d, self.e, self.h, self.l)
     }
 }
