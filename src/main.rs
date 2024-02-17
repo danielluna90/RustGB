@@ -12,11 +12,11 @@ struct Args {
 }
 
 fn main() {
-    let args = Args::parse();
+    let args: Args = Args::parse();
 
     println!("Filename: {}", args.filename);
 
-    let cpu = CPU::new();
+    let cpu: CPU = CPU::new();
 
     println!("{}", cpu.registers);
 }
