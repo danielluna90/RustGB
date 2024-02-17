@@ -1,4 +1,6 @@
 use clap::Parser;
+use eframe::egui;
+
 use crate::cpu::CPU;
 
 pub mod cpu;
@@ -11,12 +13,36 @@ struct Args {
     filename: String,
 }
 
-fn main() {
-    let args: Args = Args::parse();
+fn main() -> Result<(), eframe::Error> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([320.0, 240.0]),
+            ..Default::default()
+    };
 
-    println!("Filename: {}", args.filename);
+    eframe::run_native("RustGB", options, Box::new(|_| {
+        Box::<RustGB>::default()
+    }))
+}
 
-    let cpu: CPU = CPU::new();
+struct RustGB {
+    args: Args,
+    cpu: CPU
+}
 
-    println!("{}", cpu.registers);
+impl Default for RustGB {
+    fn default() -> Self {
+        Self {
+            args: Args::parse(),
+            cpu: CPU::new()
+        }
+    }
+}
+
+impl eframe::App for RustGB {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.heading("RustGB - Debug");
+            ui.label(format!("Filepath: {}, CPU Registers: {}", self.args.filename, self.cpu.registers));
+        });
+    }
 }

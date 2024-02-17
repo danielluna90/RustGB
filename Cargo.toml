@@ -8,3 +8,4 @@ description = "A Gameboy / Gameboy Color Emulator written in Rust"
 
 [dependencies]
 clap = { version = "4.5.0", features = ["derive"] }
+eframe = "0.26.2"
