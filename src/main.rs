@@ -1,7 +1,8 @@
 use std::path::Path;
 
 use clap::Parser;
-use eframe::egui;
+use eframe::egui::{self, Modifiers};
+use egui_extras::{Column, TableBuilder};
 
 use crate::cpu::CPU;
 
@@ -41,11 +42,28 @@ fn main() -> Result<(), eframe::Error> {
     }
 }
 
+struct WindowState {
+    // Tools
+    register_view: bool,
+
+    // Settings
+    egui_settings: bool,
+}
+
+impl WindowState {
+    fn default() -> Self {
+        Self {
+            register_view: false,
+            egui_settings: false,
+        }
+    }
+}
+
 struct RustGB {
     args: Args,
     cpu: CPU,
 
-    settings: bool,
+    state: WindowState,
 }
 
 impl Default for RustGB {
@@ -54,7 +72,7 @@ impl Default for RustGB {
             args: Args::parse(),
             cpu: CPU::new(),
 
-            settings: true,
+            state: WindowState::default(),
         }
     }
 }
@@ -63,12 +81,49 @@ impl eframe::App for RustGB {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top_bar").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
+                let open_file_shortcut =
+                    egui::KeyboardShortcut::new(Modifiers::COMMAND, egui::Key::O);
+
+                if ui.input_mut(|i| i.consume_shortcut(&open_file_shortcut)) {
+                    if let Some(path) = rfd::FileDialog::new().pick_file() {
+                        self.args.filename = Some(path.display().to_string()).unwrap();
+                    }
+
+                    ui.close_menu();
+                }
+
+                ui.menu_button("File", |ui| {
+                    ui.style_mut().wrap = Some(false);
+
+                    if ui
+                        .add(
+                            egui::Button::new("Open File...")
+                                .shortcut_text(ui.ctx().format_shortcut(&open_file_shortcut)),
+                        )
+                        .clicked()
+                    {
+                        if let Some(path) = rfd::FileDialog::new().pick_file() {
+                            self.args.filename = Some(path.display().to_string()).unwrap();
+                        }
+
+                        ui.close_menu();
+                    }
+                });
+
                 ui.menu_button("Tools", |ui| {
-                    ui.set_min_width(220.0);
                     ui.style_mut().wrap = Some(false);
 
                     if ui.add(egui::Button::new("Register View")).clicked() {
-                        self.settings = !self.settings;
+                        self.state.register_view = !self.state.register_view;
+                        ui.close_menu();
+                    }
+                });
+
+                ui.menu_button("Settings", |ui| {
+                    ui.style_mut().wrap = Some(false);
+
+                    if ui.add(egui::Button::new("eFrame Settings")).clicked() {
+                        self.state.egui_settings = !self.state.egui_settings;
                         ui.close_menu();
                     }
                 });
@@ -76,21 +131,94 @@ impl eframe::App for RustGB {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label(format!("The Game Window"));
+            ui.label(format!("Playing Game: {}", self.args.filename));
         });
 
+        egui::Window::new("Register View")
+            .open(&mut self.state.register_view)
+            .collapsible(false)
+            .resizable(false)
+            .show(ctx, |ui| {
+                TableBuilder::new(ui)
+                    .cell_layout(egui::Layout::centered_and_justified(
+                        egui::Direction::LeftToRight,
+                    ))
+                    .column(Column::exact(75.0).resizable(false))
+                    .column(Column::exact(75.0).resizable(false))
+                    .header(25.0, |mut header| {
+                        header.col(|ui| {
+                            ui.heading("Register");
+                        });
+
+                        header.col(|ui| {
+                            ui.heading("Value");
+                        });
+                    })
+                    .body(|mut body| {
+                        body.row(20.0, |mut row| {
+                            row.col(|ui| {
+                                ui.label("A");
+                            });
+                            row.col(|ui| {
+                                ui.label(format!("{:#04x}", self.cpu.registers.a));
+                            });
+                        });
+                        body.row(20.0, |mut row| {
+                            row.col(|ui| {
+                                ui.label("B");
+                            });
+                            row.col(|ui| {
+                                ui.label(format!("{:#04x}", self.cpu.registers.b));
+                            });
+                        });
+                        body.row(20.0, |mut row| {
+                            row.col(|ui| {
+                                ui.label("C");
+                            });
+                            row.col(|ui| {
+                                ui.label(format!("{:#04x}", self.cpu.registers.c));
+                            });
+                        });
+                        body.row(20.0, |mut row| {
+                            row.col(|ui| {
+                                ui.label("D");
+                            });
+                            row.col(|ui| {
+                                ui.label(format!("{:#04x}", self.cpu.registers.d));
+                            });
+                        });
+                        body.row(20.0, |mut row| {
+                            row.col(|ui| {
+                                ui.label("E");
+                            });
+                            row.col(|ui| {
+                                ui.label(format!("{:#04x}", self.cpu.registers.e));
+                            });
+                        });
+                        body.row(20.0, |mut row| {
+                            row.col(|ui| {
+                                ui.label("H");
+                            });
+                            row.col(|ui| {
+                                ui.label(format!("{:#04x}", self.cpu.registers.h));
+                            });
+                        });
+                        body.row(20.0, |mut row| {
+                            row.col(|ui| {
+                                ui.label("L");
+                            });
+                            row.col(|ui| {
+                                ui.label(format!("{:#04x}", self.cpu.registers.l));
+                            });
+                        });
+                    });
+            });
+
         egui::Window::new("eFrame Settings")
-            .open(&mut self.settings)
+            .open(&mut self.state.egui_settings)
             .vscroll(true)
             .show(ctx, |ui| {
                 ctx.settings_ui(ui);
-            });
-
-        egui::Window::new("Debug Tools")
-            .open(&mut self.settings)
-            .collapsible(false)
-            .show(ctx, |ui| {
-                ui.label(format!("CPU Registers:\n{}", self.cpu.registers));
             });
     }
 }
