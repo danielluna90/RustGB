@@ -44,6 +44,8 @@ fn main() -> Result<(), eframe::Error> {
 struct RustGB {
     args: Args,
     cpu: CPU,
+
+    settings: bool,
 }
 
 impl Default for RustGB {
@@ -51,19 +53,44 @@ impl Default for RustGB {
         Self {
             args: Args::parse(),
             cpu: CPU::new(),
+
+            settings: true,
         }
     }
 }
 
 impl eframe::App for RustGB {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::SidePanel::right("Debug Tools").show(ctx, |ui| {
-            ui.heading("RustGB - Debug Tools");
-            ui.label(format!("CPU Registers:\n{}", self.cpu.registers));
+        egui::TopBottomPanel::top("top_bar").show(ctx, |ui| {
+            egui::menu::bar(ui, |ui| {
+                ui.menu_button("Tools", |ui| {
+                    ui.set_min_width(220.0);
+                    ui.style_mut().wrap = Some(false);
+
+                    if ui.add(egui::Button::new("Register View")).clicked() {
+                        self.settings = !self.settings;
+                        ui.close_menu();
+                    }
+                });
+            });
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.label(format!("The Game Window"));
         });
+
+        egui::Window::new("eFrame Settings")
+            .open(&mut self.settings)
+            .vscroll(true)
+            .show(ctx, |ui| {
+                ctx.settings_ui(ui);
+            });
+
+        egui::Window::new("Debug Tools")
+            .open(&mut self.settings)
+            .collapsible(false)
+            .show(ctx, |ui| {
+                ui.label(format!("CPU Registers:\n{}", self.cpu.registers));
+            });
     }
 }
