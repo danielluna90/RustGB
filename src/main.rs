@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use clap::Parser;
 use eframe::egui;
 
@@ -11,38 +13,57 @@ pub mod registers;
 #[command(version = "0.1")]
 struct Args {
     filename: String,
+
+    #[arg(long, default_value_t = false)]
+    headless: bool,
 }
 
 fn main() -> Result<(), eframe::Error> {
-    let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([320.0, 240.0]),
-            ..Default::default()
-    };
+    let args: Args = Args::parse();
 
-    eframe::run_native("RustGB", options, Box::new(|_| {
-        Box::<RustGB>::default()
-    }))
+    if args.headless && !Path::new(&args.filename).is_file() {
+        print!("File at filepath {} does not exist", args.filename);
+
+        return Ok(());
+    }
+
+    if !args.headless {
+        let options = eframe::NativeOptions {
+            viewport: egui::ViewportBuilder::default().with_inner_size([640.0, 480.0]),
+            ..Default::default()
+        };
+
+        eframe::run_native("RustGB", options, Box::new(|_| Box::<RustGB>::default()))
+    } else {
+        print!("Headless mode is not implemented so far.");
+
+        Ok(())
+    }
 }
 
 struct RustGB {
     args: Args,
-    cpu: CPU
+    cpu: CPU,
 }
 
 impl Default for RustGB {
     fn default() -> Self {
         Self {
             args: Args::parse(),
-            cpu: CPU::new()
+            cpu: CPU::new(),
         }
     }
 }
 
 impl eframe::App for RustGB {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::SidePanel::right("Debug Tools").show(ctx, |ui| {
+            ui.heading("RustGB - Debug Tools");
+            ui.label(format!("CPU Registers:\n{}", self.cpu.registers));
+        });
+
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("RustGB - Debug");
-            ui.label(format!("Filepath: {}, CPU Registers: {}", self.args.filename, self.cpu.registers));
+            ui.label(format!("The Game Window"));
         });
     }
 }
