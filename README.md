@@ -7,13 +7,15 @@ A Game Boy / Game Boy Color Emulator written in Rust
 You can run `rustgb --help` which will output:
 
 ```
-RustGB - v0.1
+Usage: rustgb [OPTIONS] <FILENAME>
 
-USAGE:
-  rustgb <filename>
+Arguments:
+  <FILENAME>  Sets the ROM file to load
 
-ARGS:
-  <filename>          Sets the ROM file to load.
+Options:
+  -d, --debug    Turn debugging information on
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
 ## Features
@@ -28,4 +30,8 @@ ARGS:
 - [ ] GPU
 - [ ] Audio
 - [ ] Timer
-- [ ] GDB Support
+- [ ] Debug Tools
+  - [ ] Disassembler
+  - [ ] CPU Registers
+  - [ ] GFX Debugger
+  - [ ] Debug Interface
